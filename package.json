@@ -1,0 +1,16 @@
+{
+  "name": "streamscape",
+  "version": "1.0.0",
+  "description": "Building backend of a video streaming website like Youtube. ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "streamscape"
+  ],
+  "author": "falgun patel",
+  "license": "ISC"
+}
