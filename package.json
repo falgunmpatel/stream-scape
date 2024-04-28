@@ -2,9 +2,11 @@
   "name": "streamscape",
   "version": "1.0.0",
   "description": "Building backend of a video streaming website like Youtube. ",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "keywords": [
     "node",
@@ -12,5 +14,9 @@
     "streamscape"
   ],
   "author": "falgun patel",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "prettier": "^3.2.5"
+  }
 }
