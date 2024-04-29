@@ -26,6 +26,7 @@ const userSchema = new Schema(
     },
     avatar: {
       type: String,
+      required: [true, "Avatar is required"],
     },
     coverImage: {
       type: String,
