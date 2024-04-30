@@ -75,7 +75,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   if (!avatar) {
-    throw new ApiError(400, "Avatar file is required");
+    throw new ApiError(400, "Error Uploading Avatar!!");
   }
 
   //create the user object
@@ -232,4 +232,137 @@ const refreshAccessToken = asyncHandler(async (req, res, next) => {
   }
 });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res, next) => {
+  //get the user object
+  const user = await User.findById(req.user?._id);
+
+  //get the old and new password from the request body
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+
+  //validate the user input
+  if (newPassword !== confirmPassword) {
+    throw new ApiError(400, "New Password and Confirm Password do not match!!");
+  }
+
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, "Old Password and New Password are required!!");
+  }
+
+  //compare the old password
+  const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid Old Password!!");
+  }
+
+  //update the password
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  //return the response
+  res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Changed Successfully!!"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res, next) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "User Fetched Successfully!!"));
+});
+
+//NOTE: Create different endpoints for uodation images/files, it is considered a better practice
+const updateUserProfile = asyncHandler(async (req, res, next) => {
+  //get the user object
+  const { fullName, email } = req.body;
+
+  //validate the user input
+  if (!fullName || !email) {
+    throw new ApiError(400, "Full Name and Email are required");
+  }
+
+  //update the user object
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    { $set: { fullName, email } },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  //return the response
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, "User Profile Updated Successfully!!"));
+});
+
+const updateUserAvatar = asyncHandler(async (req, res, next) => {
+  //get the avatar from the request
+  const avatarLocalPath = req.files?.path;
+
+  //validate the user input
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is required");
+  }
+
+  //upload the avatar to cloudinary
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+  //validate the upload
+  if (!avatar.url) {
+    throw new ApiError(400, "Error Uploading Avatar!!");
+  }
+
+  //update the user object
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    { $set: { avatar: avatar.url } },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  //return the response
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, "User Avatar Updated Successfully!!"));
+});
+
+const updateUserCoverImage = asyncHandler(async (req, res, next) => {
+  //get the avatar from the request
+  const coverImageLocalPath = req.files?.path;
+
+  //validate the user input
+  if (!coverImageLocalPath) {
+    throw new ApiError(400, "Cover Image file is required");
+  }
+
+  //upload the avatar to cloudinary
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+  //validate the upload
+  if (!coverImageLocalPath.url) {
+    throw new ApiError(400, "Error Uploading Cover Image!!");
+  }
+
+  //update the user object
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    { $set: { avatar: coverImage.url } },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  //return the response
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, user, "User Cover Image Updated Successfully!!")
+    );
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateUserProfile,
+  updateUserAvatar,
+  updateUserCoverImage,
+};
