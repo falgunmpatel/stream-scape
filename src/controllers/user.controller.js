@@ -2,7 +2,10 @@ import { asyncHandler } from "../utils/asynHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  uploadOnCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -240,12 +243,19 @@ const changeCurrentPassword = asyncHandler(async (req, res, next) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
 
   //validate the user input
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    throw new ApiError(
+      400,
+      "Old Password, New Password and Confirm Password are required"
+    );
+  }
+
   if (newPassword !== confirmPassword) {
     throw new ApiError(400, "New Password and Confirm Password do not match!!");
   }
 
-  if (!oldPassword || !newPassword) {
-    throw new ApiError(400, "Old Password and New Password are required!!");
+  if (oldPassword === newPassword) {
+    throw new ApiError(400, "Old Password and New Password cannot be same!!");
   }
 
   //compare the old password
@@ -276,7 +286,7 @@ const updateUserProfile = asyncHandler(async (req, res, next) => {
   const { fullName, email } = req.body;
 
   //validate the user input
-  if (!fullName || !email) {
+  if (!fullName && !email) {
     throw new ApiError(400, "Full Name and Email are required");
   }
 
@@ -295,7 +305,7 @@ const updateUserProfile = asyncHandler(async (req, res, next) => {
 
 const updateUserAvatar = asyncHandler(async (req, res, next) => {
   //get the avatar from the request
-  const avatarLocalPath = req.files?.path;
+  const avatarLocalPath = req.file?.path;
 
   //validate the user input
   if (!avatarLocalPath) {
@@ -310,12 +320,20 @@ const updateUserAvatar = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, "Error Uploading Avatar!!");
   }
 
+  //remove the old avatar from cloudinary
+  const user = await User.findById(req.user?._id);
+  if (user.avatar) {
+    const publicId = user.avatar.split("/").pop().split(".")[0];
+    await deleteFromCloudinary(publicId);
+  }
+
   //update the user object
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    { $set: { avatar: avatar.url } },
-    { new: true }
-  ).select("-password -refreshToken");
+  user.avatar = avatar.url;
+  await user.save({ validateBeforeSave: false });
+
+  //remove password and refresh token field from the response
+  user.password = undefined;
+  user.refreshToken = undefined;
 
   //return the response
   res
@@ -325,7 +343,7 @@ const updateUserAvatar = asyncHandler(async (req, res, next) => {
 
 const updateUserCoverImage = asyncHandler(async (req, res, next) => {
   //get the avatar from the request
-  const coverImageLocalPath = req.files?.path;
+  const coverImageLocalPath = req.file?.path;
 
   //validate the user input
   if (!coverImageLocalPath) {
@@ -336,16 +354,24 @@ const updateUserCoverImage = asyncHandler(async (req, res, next) => {
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
   //validate the upload
-  if (!coverImageLocalPath.url) {
+  if (!coverImage.url) {
     throw new ApiError(400, "Error Uploading Cover Image!!");
   }
 
+  //remove the old avatar from cloudinary
+  const user = await User.findById(req.user?._id);
+  if (user.coverImage) {
+    const publicId = user.coverImage.split("/").pop().split(".")[0];
+    await deleteFromCloudinary(publicId);
+  }
+
   //update the user object
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    { $set: { avatar: coverImage.url } },
-    { new: true }
-  ).select("-password -refreshToken");
+  user.coverImage = coverImage.url;
+  await user.save({ validateBeforeSave: false });
+
+  //remove password and refresh token field from the response
+  user.password = undefined;
+  user.refreshToken = undefined;
 
   //return the response
   res
