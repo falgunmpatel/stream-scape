@@ -7,6 +7,7 @@ import {
   deleteFromCloudinary,
 } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -163,7 +164,7 @@ const logoutUser = asyncHandler(async (req, res, next) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: { refreshToken: undefined },
+      $unset: { refreshToken: 1 },
     },
     { new: true }
   );
@@ -453,9 +454,9 @@ const getUserChannelProfile = asyncHandler(async (req, res, next) => {
 //TODO: Try tweaking these aggregation pipelines to explore more features
 const getWatchHistoty = asyncHandler(async (req, res, next) => {
   //get the user object
-  const user = await User.find([
+  const user = await User.aggregate([
     {
-      $match: { _id: new mongoose.Types.ObjectId(req.user._id) },
+      $match: { _id: new mongoose.Types.ObjectId(req.user?._id) },
     },
     {
       $lookup: {
@@ -480,16 +481,14 @@ const getWatchHistoty = asyncHandler(async (req, res, next) => {
                 },
               ],
             },
-            pipeline: [
-              {
-                $addFields: {
-                  owner: {
-                    // $arrayElemAt: ["$owner", 0]
-                    $first: "$owner",
-                  },
-                },
+          },
+          {
+            $addFields: {
+              owner: {
+                // $arrayElemAt: ["$owner", 0]
+                $first: "$owner",
               },
-            ],
+            },
           },
         ],
       },
