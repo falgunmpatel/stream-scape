@@ -11,6 +11,10 @@ const videoSchema = new Schema(
       type: String,
       required: [true, "Thumbnail is required"],
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
     title: {
       type: String,
       required: [true, "Thumbnail is required"],
@@ -18,10 +22,6 @@ const videoSchema = new Schema(
     description: {
       type: String,
       required: [true, "Description is required"],
-    },
-    videoUrl: {
-      type: String,
-      required: [true, "Video URL is required"],
     },
     duration: {
       type: Number,
@@ -34,10 +34,6 @@ const videoSchema = new Schema(
     isPublished: {
       type: Boolean,
       default: true,
-    },
-    owner: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
     },
   },
   { timestamps: true }
