@@ -90,7 +90,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
   const thumbnailPath = req.files.thumbnail[0].path;
 
   //check if video file and thumbnail are available
-  if (title === "" || description === "") {
+  if (title.trim() === "" || description.trim() === "") {
     new ApiError(400, "Title and description are required!!");
   }
   if (!videoFilePath || !thumbnailPath) {
@@ -184,7 +184,7 @@ const updateVideo = asyncHandler(async (req, res) => {
   }
 
   //check if title and description are available
-  if (title === "" && description === "") {
+  if (title.trim() === "" && description.trim() === "") {
     //nothing to update
     res.status(400).json(new ApiResponse(400, {}, "Nothing to update!!"));
     return;
