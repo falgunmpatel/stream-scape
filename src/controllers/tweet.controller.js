@@ -51,6 +51,17 @@ const updateTweet = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid tweet id!!");
   }
 
+  // Validate content
+  if (content.trim() === "") {
+    // nothing to update
+    res
+      .status(400)
+      .json(
+        new ApiResponse(400, {}, "Tweet not updated!! Tweet Content Empty!!")
+      );
+    return;
+  }
+
   // Update tweet
   const tweet = await Tweet.findByIdAndUpdate(
     tweetId,
