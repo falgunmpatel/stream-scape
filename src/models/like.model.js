@@ -14,6 +14,10 @@ const likeSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Comment",
     },
+    likeType: {
+      type: String,
+      enum: ["like", "dislike"],
+    },
     likedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
