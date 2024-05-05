@@ -77,6 +77,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     },
   ]);
 
+  //return response
   res
     .status(200)
     .json(new ApiResponse(200, videos, "Videos fetched successfully!!"));
@@ -86,6 +87,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
 
   //get video file and thumbnail
+  console.log(req.files);
   const videoFilePath = req.files.videoFile[0].path;
   const thumbnailPath = req.files.thumbnail[0].path;
 
